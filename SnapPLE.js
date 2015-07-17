@@ -94,19 +94,21 @@ gradingLog.prototype.addTest = function(testClass, blockSpec, input, expOut, tim
 	return this.testCount;
 };
 
-gradingLog.prototype.addAssert = function(testClass, statement, feedback, text) {
+gradingLog.prototype.addAssert = function(testClass, statement, feedback, text, pos_fb, neg_fb) {
 	this.testCount += 1;
 	this[this.testCount] = {'testClass': "a",
 							'text': text,
-							'correct': statement,
+							'correct': statement(),
 							'feedback': feedback,
-							'graded': true};
-							//'assertion': statement};
+							'graded': true,
+							'pos_fb': pos_fb,
+							'neg_fb': neg_fb,
+							'assertion': statement};
 	return this.testCount;
 
 }
 
-gradingLog.prototype.updateAssert = function(testID, feedback, correct, text) {
+gradingLog.prototype.updateAssert = function(testID, feedback, correct) {
 	var test = this[testID];
 	try {
 		test.graded = true;
@@ -496,10 +498,10 @@ function AG_log(outputLog, snapXMLString) {
  * WARNING: DOES NOT EVALUATE LOG
  */
 function testAssert(outputLog, assertion, pos_fb, neg_fb, ass_text) {
-	if (assertion) {
-		outputLog.addAssert("a", assertion, pos_fb, ass_text);
+	if (assertion()) {
+		outputLog.addAssert("a", assertion, pos_fb, ass_text, pos_fb, neg_fb);
 	} else {
-		outputLog.addAssert("a", assertion, neg_fb, ass_text);
+		outputLog.addAssert("a", assertion, neg_fb, ass_text, pos_fb, neg_fb);
 	}
 	return outputLog;
 }

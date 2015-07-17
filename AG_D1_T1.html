@@ -34,15 +34,14 @@
         function AGTest(outputLog) {
             /* Factorial */
 
-            /*var assert1 = function assert1() {
-                isScriptPresent('factorial %s',0);
-            }*/
+            var assert1 = function assert1() {
+                return isScriptPresent('factorial %s',0);
+            }
+
 
             assert = function assert() {
-                testAssert(outputLog, isScriptPresent('factorial %s',0),
-                "The 'factorial' block is present.",
-                "The 'factorial %num' block was not found on-screen.",
-                "Make sure you name your custom block, 'factorial %num'.");
+                testAssert(outputLog, assert1,//isScriptPresent('factorial %s',0),
+                pos_fb, neg_fb, "Make sure you name your custom block, 'factorial %num'.");
             }
             assert();
             /*testAssert(outputLog, assert1,//isScriptPresent('factorial %s',0),
@@ -690,7 +689,13 @@
                 }  
             }
             console.log(outputLog);
-            regradeOnClick(outputLog);
+            var regrade_buttons = document.getElementsByClassName("regrade");
+            for(var i=0; i<regrade_buttons.length; i++) {
+                regrade_buttons[i].onclick = function() {
+                    var testId = this.classList[2];
+                    regradeOnClick(outputLog, testId);
+                }
+            }
         }
 
         function addBasicHeadings() {
@@ -773,9 +778,7 @@
             }
         }
 
-        function regradeOnClick(outputLog) {
-            $(".regrade").click(function() {
-                var testId = this.classList[2];
+        function regradeOnClick(outputLog, testId) {
                 var test = outputLog[testId];
                 outputLog[testId].graded = false;
                 outputLog[testId].correct = false;
@@ -786,12 +789,23 @@
                 //outputLog.startSnapTest(1);
                 if (test.testClass === "r") {
                     outputLog.startSnapTest(parseInt(testId, 10));
-                } else {
-                    if (isScriptPresent('factorial %s',0)) {
-                        outputLog.updateAssert(testId, pos_fb, true);
-                    } else {
-                        outputLog.updateAssert(testId, neg_fb, false);
+                } else if (test.testClass === "a") {
+                    
+                    /*var original_numtests = outputLog.testCount;
+                    assert();
+                    for (i=0; i<outputLog.testCount - original_numtests; i++) {
+
                     }
+                    outputLog[testId] = outputLog[outputLog.testCount];
+                    delete o[ old_key ];*/
+                    if (test.assertion()) {
+                        test.feedback = test.pos_fb;
+                        test.correct = true;
+                    } else {
+                        test.feedback = test.neg_fb;
+                        test.correct = false;
+                    }
+                    test.graded = true;
                     populateFeedback(outputLog);
                     //outputLog.updateAssert(testId, )
                     //outputLog.startSnapTest(parseInt(testId, 10));
@@ -799,7 +813,6 @@
                 //outputLog.startSnapTest(parseInt(testId, 10));
                 console.log(outputLog);
                 //this.classList[2]); 
-            });
         }
 
         var world;
