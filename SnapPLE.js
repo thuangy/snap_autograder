@@ -18,8 +18,8 @@ function gradingLog(snapWorld, taskID) {
 	this.graded = false;
 	this.numCorrect = 0;
 	var prev_log = localStorage.getItem(taskID + "_test_log");
-	if (prev_log !== null) {
-		this.numAttempts = prev_log.numAttempts;
+	if (prev_log !== null && JSON.parse(prev_log).numAttempts !== undefined) {
+		this.numAttempts = JSON.parse(prev_log).numAttempts;
 	} else {
 		this.numAttempts = 0;
 	}
@@ -413,6 +413,7 @@ gradingLog.prototype.scoreLog = function() {
 	//Calculate the pScore
 	this.numCorrect = tests_passed;
 	this.pScore = tests_passed / this.testCount;
+	//this.numAttempts += 1;
 	//Save the log in localStorage
 	this.saveLog();
 
