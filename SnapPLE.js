@@ -108,7 +108,7 @@ gradingLog.prototype.addAssert = function(testClass, statement, feedback, text, 
 
 }
 
-gradingLog.prototype.updateAssert = function(testID, feedback, correct) {
+/*gradingLog.prototype.updateAssert = function(testID, feedback, correct) {
 	var test = this[testID];
 	try {
 		test.graded = true;
@@ -119,7 +119,7 @@ gradingLog.prototype.updateAssert = function(testID, feedback, correct) {
 	} catch(e) {
 		throw "gradingLog.finishTest: TestID is invalid.";
 	}
-}
+}*/
 
 /*
  * Initiates Reporter tests if they exist, and returns true in such a case,
@@ -1663,6 +1663,45 @@ function testCBlockContains(block1, block2, spriteIndex, outputLog) {
     return outputLog;
 }
 
+/* Takes in a script SCRIPT, a string that is either "if" or "else" named CLAUSE, a blockspec
+ * such as "move %n steps" BLOCK1SPEC, and an optional argument array ARGARRAY1 belonging to block1.
+ * Returns true if the block represented by BLOCK1SPEC occurs inside the clause represented 
+ * by CLAUSE in an if-else block in the SCRIPT, which can be obtained by calling:
+ *
+ * JSONscript(...)
+ */
+function ifElseContains(script, clause, block1Spec, argArray1) {
+    if (!scriptContainsBlock(script, "if %b %c else %c")) {
+        return false;
+    }
+    if (!(clause === "if" || clause === "else")) {
+        return false; //return false or return a string!??!?!
+    }
+
+    var morph1, type1;
+    for (var i = 0; i < script.length; i++) {
+        morph1 = script[i];
+        type1 = typeof(morph1);
+        if ((type1 === "string")) {
+            continue;
+        } else if (Object.prototype.toString.call(morph1) === '[object Array]') { 
+            if (ifElseContains(morph1, clause, block1Spec, argArray1)) {
+                return true;
+            }
+        } else if (morph1.blockSp === "if %b %c else %c") {
+            if (clause === "if") {
+                if (scriptContainsBlock(morph1.inputs[0], block1Spec, argArray1)) {
+                    return true;
+                }
+            } else if (clause === "else") {
+                if (scriptContainsBlock(morph1.inputs[1], block1Spec, argArray1)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
 /* Takes in two blockSpecs and boolean SEEN1, which is initialized to false.
  * Returns true if blockSpec string BLOCK1 precedes the blockSpec string BLOCK2

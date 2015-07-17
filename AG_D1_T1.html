@@ -794,7 +794,7 @@
                 if (test.testClass === "r") {
                     outputLog.startSnapTest(parseInt(testId, 10));
 
-                // for assertion tests, change feedback accordingly to what the assertion outputs
+                // for assertion tests, change feedback accordingly to what the assertion outputs 
                 } else if (test.testClass === "a") {
                     if (test.assertion()) {
                         test.feedback = test.pos_fb;
@@ -940,11 +940,11 @@
                 }
             }
 
-            /*results_overlay.onclick = function(e) {
-                if (!(document.getElementById('ag-results').contains(e.target))) {
+            results_overlay.onclick = function(e) {
+                if (!(document.getElementById('ag-results').contains(e.target)) && !e.target.classList.contains("regrade")) {
                     closeResults();
                 }
-            }*/
+            }
 
             snapWorld.onclick = function(e) {
                 if (!(document.getElementById('dropdown-open').contains(e.target))) {
