@@ -224,7 +224,7 @@
                 undo_button.style.pointerEvents = "auto";
             }*/
 
-            grayOutButtons(world, id);
+            grayOutButtons(snapWorld, taskID);
 
             var outputLog;
             //If current XML is different from prev_xml
@@ -292,7 +292,7 @@
             outputLog.saveSnapXML(outputLog.taskID + "_test_state");
             //outputLog.numAttempts += 1;
             populateFeedback(outputLog);
-            grayOutButtons(world, id);
+            grayOutButtons(outputLog.snapWorld, outputLog.taskID);
             console.log('Autograder test Results:');
             console.log(outputLog);
         }
@@ -507,6 +507,8 @@
 
         function resetState(snapWorld, taskID) {
 
+            var numAttempts = JSON.parse(localStorage.getItem(taskID + "_test_log")).numAttempts;
+
             localStorage.removeItem(taskID + "_test_log");
             localStorage.removeItem(taskID + "_test_state");
             localStorage.removeItem(taskID + "_c_test_log");
@@ -516,24 +518,28 @@
             ide.newProject();
             var new_log = AGStart(snapWorld, taskID);
             populateFeedback(new_log);
-            grayOutButtons(world, id);
+            new_log.numAttempts = numAttempts;
+            grayOutButtons(snapWorld, taskID);
         }
 
         function revertToBestState(snapWorld, taskID) {
     
             var ide = snapWorld.children[0];
 
+            var numAttempts = JSON.parse(localStorage.getItem(taskID + "_test_log")).numAttempts;
+
             var c_prev_xml = localStorage.getItem(taskID + "_c_test_state");
             var c_prev_log = localStorage.getItem(taskID + "_c_test_log");
             localStorage.setItem(taskID + "_test_state", c_prev_xml);
             localStorage.setItem(taskID + "_test_log", c_prev_log);
 
-            var prev_log = JSON.parse(c_prev_log);
+            var prev_log = JSON.parse(localStorage.getItem(taskID + "_test_log"));
             prev_log.snapWorld = snapWorld;
             AG_bar_graded(prev_log);
             populateFeedback(prev_log);
+            prev_log.numAttempts = numAttempts;
             ide.openProjectString(c_prev_xml);
-            grayOutButtons(world, id);
+            grayOutButtons(snapWorld, taskID);
         }
 
         function revertToLastState(snapWorld, taskID) {
@@ -549,25 +555,28 @@
             }
             populateFeedback(prev_log);
             ide.openProjectString(prev_xml);
-            grayOutButtons(world, id);
+            grayOutButtons(snapWorld, taskID);
         }
 
         function revertToLastSubmit(snapWorld, taskID) {
+            var numAttempts = JSON.parse(localStorage.getItem(taskID + "_test_log")).numAttempts;
+
             var last_xml = localStorage.getItem(taskID + "_last_submitted_state");
             var last_log = localStorage.getItem(taskID + "_last_submitted_log");
             var ide = snapWorld.children[0];
 
             localStorage.setItem(taskID + "_test_state", last_xml);
             localStorage.setItem(taskID + "_test_log", last_log);
-            var prev_log = JSON.parse(last_log);
+            var prev_log = JSON.parse(localStorage.getItem(taskID + "_test_log"));
             if (prev_log['allCorrect']) {
                 AG_bar_graded(prev_log);
             } else {
                 AG_bar_semigraded(prev_log);
             }
             populateFeedback(prev_log);
+            prev_log.numAttempts = numAttempts;
             ide.openProjectString(last_xml);
-            grayOutButtons(world, id);
+            grayOutButtons(snapWorld, taskID);
 
         }
 
@@ -784,37 +793,37 @@
         }
 
         function regradeOnClick(outputLog, testId) {
-                var test = outputLog[testId];
-                test.graded = false;
-                test.correct = false;
-                outputLog.numAttempts += 1;
-                //alert(typeof outputLog.startSnapTest);
-                //outputLog.startSnapTest(2);
-                //outputLog.startSnapTest(1);
-                if (test.testClass === "r") {
-                    outputLog.startSnapTest(parseInt(testId, 10));
+            var test = outputLog[testId];
+            test.graded = false;
+            test.correct = false;
+            outputLog.numAttempts += 1;
+            //alert(typeof outputLog.startSnapTest);
+            //outputLog.startSnapTest(2);
+            //outputLog.startSnapTest(1);
+            if (test.testClass === "r") {
+                outputLog.startSnapTest(parseInt(testId, 10));
 
-                // for assertion tests, change feedback accordingly to what the assertion outputs 
-                } else if (test.testClass === "a") {
-                    if (test.assertion()) {
-                        test.feedback = test.pos_fb;
-                        test.correct = true;
-                    } else {
-                        test.feedback = test.neg_fb;
-                        test.correct = false;
-                    }
-                    test.graded = true;
-                    populateFeedback(outputLog);
-                    //outputLog.updateAssert(testId, )
-                    //outputLog.startSnapTest(parseInt(testId, 10));
+            // for assertion tests, change feedback accordingly to whether assertion is true or false
+            } else if (test.testClass === "a") {
+                if (test.assertion()) {
+                    test.feedback = test.pos_fb;
+                    test.correct = true;
+                } else {
+                    test.feedback = test.neg_fb;
+                    test.correct = false;
                 }
-
-                //What about other types of tests?
-
+                test.graded = true;
+                populateFeedback(outputLog);
+                //outputLog.updateAssert(testId, )
                 //outputLog.startSnapTest(parseInt(testId, 10));
-                outputLog.saveLog;
-                console.log(outputLog);
-                //this.classList[2]); 
+            }
+
+            //What about other types of tests?
+
+            //outputLog.startSnapTest(parseInt(testId, 10));
+            outputLog.saveLog;
+            console.log(outputLog);
+            //this.classList[2]); 
         }
 
         var world;
@@ -911,10 +920,10 @@
             var snapWorld = document.getElementById("world");
             var regrade_buttons = document.getElementsByClassName("regrade");
 
-            reset_button.onclick = function() { resetState(world, id); };
-            revert_button.onclick = function() { revertToBestState(world, id); };
-            last_submit.onclick = function() { revertToLastSubmit(world, id); };
-            undo_button.onclick = function() { revertToLastState(world, id); };
+            reset_button.onclick = function() { resetState(world, id); toggleMenu(id); };
+            revert_button.onclick = function() { revertToBestState(world, id); toggleMenu(id); };
+            last_submit.onclick = function() { revertToLastSubmit(world, id); toggleMenu(id); };
+            undo_button.onclick = function() { revertToLastState(world, id); toggleMenu(id); };
             menu_button.onclick = function() { toggleMenu(id); };
 
 
@@ -961,9 +970,9 @@
              */
 
 
-            /*document.addEventListener("click", function() {
-                AGUpdate(world, id);
-            });*/
+            document.addEventListener("click", function() {
+                grayOutButtons(world, id);
+            });
             //TODO: Fix this timeout.
             setTimeout(function() {
                 console.log(world);
