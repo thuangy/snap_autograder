@@ -23,7 +23,7 @@ function gradingLog(snapWorld, taskID) {
 	} else {
 		this.numAttempts = 0;
 	}
-	//this.numAttempts 
+	this.timeStamp = new Date().toUTCString();
 }
 
 /* Save the gradingLog in localStorage.
@@ -107,19 +107,6 @@ gradingLog.prototype.addAssert = function(testClass, statement, feedback, text, 
 	return this.testCount;
 
 }
-
-/*gradingLog.prototype.updateAssert = function(testID, feedback, correct) {
-	var test = this[testID];
-	try {
-		test.graded = true;
-		test.feedback = feedback || test.feedback;
-		test.correct = correct || test.correct;
-		//test.text = text;
-
-	} catch(e) {
-		throw "gradingLog.finishTest: TestID is invalid.";
-	}
-}*/
 
 /*
  * Initiates Reporter tests if they exist, and returns true in such a case,

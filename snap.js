@@ -10425,12 +10425,15 @@ WorldMorph.prototype.initEventListeners = function () {
 
     window.onbeforeunload = function (evt) {
         var e = evt || window.event,
-            msg = "Are you sure you want to leave?";
+            msg = "Are you sure you want to leave?",
+            msg = "Submitting unsaved changes to edX";
         // For IE and Firefox
         if (e) {
             e.returnValue = msg;
         }
         // For Safari / chrome
+        alert("hello");
+        $('.check-label').click();
         return msg;
     };
 };

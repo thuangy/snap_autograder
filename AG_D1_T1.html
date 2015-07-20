@@ -25,9 +25,6 @@
         // taskID uniquely identifies the task for saving in browser localStorage.
         var taskID = "AG_D1_T1";
         var id = courseID + taskID;
-        var assert;
-        var pos_fb = "The 'factorial' block is present.";
-        var neg_fb = "The 'factorial %num' block was not found on-screen.";
 
         // Add tests to the outputLog. Function is called by runAGTest(id, outputLog)
         // var testLog;
@@ -39,11 +36,10 @@
             }
 
 
-            assert = function assert() {
-                testAssert(outputLog, assert1,//isScriptPresent('factorial %s',0),
-                pos_fb, neg_fb, "Make sure you name your custom block, 'factorial %num'.");
-            }
-            assert();
+            testAssert(outputLog, assert1,//isScriptPresent('factorial %s',0),
+                "The 'factorial' block is present.", 
+                "The 'factorial %num' block was not found on-screen.", 
+                "Make sure you name your custom block, 'factorial %num'.");
             /*testAssert(outputLog, assert1,//isScriptPresent('factorial %s',0),
                 "The 'factorial' block is present.",
                 "The 'factorial %num' block was not found on-screen.",
@@ -190,39 +186,6 @@
 
 
             //menu bar grays out options that are not available (ex. current state is same as best attempt) and restores the button state
-
-            /*var last_submit = document.getElementById("last-submit");
-            if (last_xml === null || isSameSnapXML(last_xml, curr_xml)) {
-                last_submit.style.color = "#373737";
-                last_submit.style.pointerEvents = "none";
-                last_submit.parentNode.id = "disabled-button";
-            } else {
-                last_submit.parentNode.id = "enabled-button";
-                last_submit.style.color = "white";
-                last_submit.style.pointerEvents = "auto";
-            }
-
-            var revert_button = document.getElementById("revert-button");
-            if (c_prev_xml === null || isSameSnapXML(c_prev_xml, curr_xml)) {
-                revert_button.style.color = "#373737";
-                revert_button.style.pointerEvents = "none";
-                revert_button.parentNode.id = "disabled-button";
-            } else {
-                revert_button.parentNode.id = "enabled-button";
-                revert_button.style.color = "white";
-                revert_button.style.pointerEvents = "auto";
-            }
-
-            var undo_button = document.getElementById("undo-button");
-            if (prev_xml === null || isSameSnapXML(prev_xml, curr_xml)) {
-                undo_button.style.color = "#373737";
-                undo_button.style.pointerEvents = "none";
-                undo_button.parentNode.id = "disabled-button";
-            } else {
-                undo_button.parentNode.id = "enabled-button";
-                undo_button.style.color = "white";
-                undo_button.style.pointerEvents = "auto";
-            }*/
 
             grayOutButtons(snapWorld, taskID);
 
@@ -517,8 +480,11 @@
             var ide = snapWorld.children[0];
             ide.newProject();
             var new_log = AGStart(snapWorld, taskID);
-            populateFeedback(new_log);
             new_log.numAttempts = numAttempts;
+            //localStorage.setItem(taskID + "_test_log", new_log);
+            localStorage.setItem(taskID + "_test_state", ide.serializer.serialize(ide.stage));
+            populateFeedback(new_log);
+            //localStorage.setItem(taskID + "_test_log", new_log);
             grayOutButtons(snapWorld, taskID);
         }
 
@@ -688,10 +654,10 @@
                 // If test is correct, make the feedback appropriately colored. 
                 if (feedback[test]["correct"] === true) {
                     addTableCell(feedback[test]["feedback"], "correctans", newRow);
-                    addTableCell("Regrade", ["data", "hidden"], newRow);
+                    addRegradeButton("Regrade", ["data", "hidden"], newRow);
                 } else {
                     addTableCell(feedback[test]["feedback"], "incorrectans", newRow);
-                    addTableCell("Regrade", ["data", "regrade", test], newRow);
+                    addRegradeButton("Regrade", ["data", "regrade", test], newRow);
                 }
 
                 if (feedback[test]["testClass"] === "r") {
@@ -701,6 +667,7 @@
                 }  
             }
             console.log(outputLog);
+            outputLog.saveLog();
 
             // makes recently created regrade buttons clickable 
             var regrade_buttons = document.getElementsByClassName("regrade");
@@ -741,6 +708,21 @@
             var data = document.createElement("td");
             var text = document.createTextNode(text);
             data.appendChild(text);
+            if (Array.isArray(elemClass)) {
+                DOMTokenList.prototype.add.apply(data.classList, elemClass);
+            } else {
+                data.classList.add(elemClass);
+            }
+            row.appendChild(data);
+        }
+
+        function addRegradeButton(text, elemClass, row) {
+            var data = document.createElement("td");
+            var button = document.createElement("p");
+            var text = document.createTextNode(text);
+            button.classList.add("regrade-button");
+            button.appendChild(text);
+            data.appendChild(button);
             if (Array.isArray(elemClass)) {
                 DOMTokenList.prototype.add.apply(data.classList, elemClass);
             } else {
@@ -797,9 +779,6 @@
             test.graded = false;
             test.correct = false;
             outputLog.numAttempts += 1;
-            //alert(typeof outputLog.startSnapTest);
-            //outputLog.startSnapTest(2);
-            //outputLog.startSnapTest(1);
             if (test.testClass === "r") {
                 outputLog.startSnapTest(parseInt(testId, 10));
 
@@ -813,17 +792,12 @@
                     test.correct = false;
                 }
                 test.graded = true;
-                populateFeedback(outputLog);
-                //outputLog.updateAssert(testId, )
-                //outputLog.startSnapTest(parseInt(testId, 10));
             }
 
             //What about other types of tests?
 
-            //outputLog.startSnapTest(parseInt(testId, 10));
-            outputLog.saveLog;
+            outputLog.scoreLog();
             console.log(outputLog);
-            //this.classList[2]); 
         }
 
         var world;
@@ -919,6 +893,7 @@
             var results_overlay = document.getElementById("ag-output");
             var snapWorld = document.getElementById("world");
             var regrade_buttons = document.getElementsByClassName("regrade");
+            //var outside_menu = document.getElementById("outside-menu");
 
             reset_button.onclick = function() { resetState(world, id); toggleMenu(id); };
             revert_button.onclick = function() { revertToBestState(world, id); toggleMenu(id); };
@@ -926,14 +901,6 @@
             undo_button.onclick = function() { revertToLastState(world, id); toggleMenu(id); };
             menu_button.onclick = function() { toggleMenu(id); };
 
-
-            /*regrade_buttons[0].onclick = function() {
-                alert("hello");
-            }*/
-
-            /*document.getElementsByClassName("1")[0].onclick = function() {
-                alert("hello");
-            }*/
 
             $(".bubble").click(function(event){
                 event.stopPropagation();  
@@ -950,21 +917,23 @@
             }
 
             results_overlay.onclick = function(e) {
-                if (!(document.getElementById('ag-results').contains(e.target)) && !e.target.classList.contains("regrade")) {
+                if (!(document.getElementById('ag-results').contains(e.target)) && e.target.className.indexOf("regrade") === -1) {
                     closeResults();
                 }
             }
 
             snapWorld.onclick = function(e) {
-                if (!(document.getElementById('dropdown-open').contains(e.target))) {
+                if (document.getElementById('dropdown-open') !== null && !(document.getElementById('onclick-menu').contains(e.target))) {
                     toggleMenu();
                 }
             }
 
-
-            /*help_menu.onclick = function() {
-                openModal();
+            /*outside_menu.onclick = function(e) {
+                if (document.getElementById('dropdown-open') !== null && !(document.getElementById('onclick-menu').contains(e.target))) {
+                    toggleMenu();
+                }
             }*/
+
             /* Check if the snap xml has changed "significantly".
              * Exclude script position and edit history.
              */
@@ -981,7 +950,7 @@
                 runAGTest(world, id);
 
                 //for some reason, the for loop in populateFeedback doesn't increment correctly the first time it is run, so populateFeedback has to be called twice at the very beginning...
-                populateFeedback(outputLog);
+                //populateFeedback(outputLog);
                 //populateFeedback(outputLog);
                 grayOutButtons(world, id);
 
@@ -1022,7 +991,6 @@
         }
 
     </script>
-    <script type="text/javascript" src="SnapPLE.js"></script>
     <script type="text/javascript" src="AG_EDX.js"></script>
 </head>
 <body style="margin: 0;">
@@ -1031,6 +999,7 @@
 
 
 <!-- Snap Autograding Button -->
+<!--<div id="outside-menu">-->
 <div id="autograding_bar">
     <div tabindex="0" class="onclick-menu" id='onclick-menu' style="display:inline-block">
         <span title="Menu">&#9776;</span>
@@ -1060,6 +1029,7 @@
 <!-- Snap Autograding Menu -->
 
 </div>
+<!--</div>-->
 
 <!-- Autograding Menu Help Button -->
 <!-- <div style="display:inline-block" class="AG-help-button" id="circle" onclick="openPopup();">?
@@ -1126,6 +1096,5 @@
 
     </div>
     <script type="text/javascript" src="AG_status_bar.js" />
-    <script type="text/javascript" src="SnapPLE.js"></script>
 </body>
 </html>
